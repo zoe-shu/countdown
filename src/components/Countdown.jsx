@@ -1,21 +1,39 @@
 import React from 'react';
 
+/*
+- Pick an area of improvement to implement.
+ -Removed the part that calculating the difference of year, because it is not necessary
+
+- What would happen to the current code if the date were changed, the page layout was changed or the format was changed?
+ -The Birthday can be changed on /src/countdownConfig.json
+ -If the date format not correct as YYYY-MM-DD, it will set as 2023-01-01
+ -Display birthday message and animation if today is matched with the birthday
+ -If today is the day after birthday, will countdown to next year's birthday
+
+- How would you make this countdown more aesthetically pleasing?
+ -Based on time limitation, layout referenced from https://codepen.io/ManajitPal/pen/pxEGVo and made some changes on animation.
+
+- Trust your design instincts, and explain how your design choices impact the user experience
+ -Using responsive layout, users can browse it on different devices.
+ -Using light color and animation, make the website more attractive and have the vibe of celebrating the user's birthday.
+*/
+
 class Countdown extends React.Component {
   constructor(props) {
     super(props);
-
     this.state = {
       days: 0,
       hours: 0,
       min: 0,
       sec: 0,
+      isBirthday: false,
     }
   }
 
   componentDidMount() {
     // update every second
     this.interval = setInterval(() => {
-      const date = this.calculateCountdown(this.props.date);
+      const date = this.calculateCountdown(new Date(this.props.date));
       date ? this.setState(date) : this.stop();
     }, 1000);
   }
@@ -25,8 +43,21 @@ class Countdown extends React.Component {
   }
 
   calculateCountdown(endDate) {
+    endDate = new Date(endDate);
+    endDate.setYear(new Date().getFullYear());
+
     let diff = (Date.parse(new Date(endDate)) - Date.parse(new Date())) / 1000;
 
+    if(diff <= 0 && diff >= -86400 ){
+      //the exact day of birthday
+      this.setState({isBirthday : true});
+    }else if(diff < 0 && diff <= -86401 ){
+      //the day after birthday, countdown to next year's birthday
+      endDate.setYear(new Date().getFullYear()+1);
+      diff = (Date.parse(new Date(endDate)) - Date.parse(new Date())) / 1000;
+      this.setState({isBirthday : false});
+    }
+    
     const timeLeft = {
       years: 0,
       days: 0,
@@ -35,12 +66,9 @@ class Countdown extends React.Component {
       sec: 0,
       millisec: 0,
     };
-
+    
     // calculate time difference between now and expected date
-    if (diff >= (365.25 * 86400)) { // 365.25 * 24 * 60 * 60
-      timeLeft.years = Math.floor(diff / (365.25 * 86400));
-      diff -= timeLeft.years * 365.25 * 86400;
-    }
+      //removed not neccesary calaulation of year difference
     if (diff >= 86400) { // 24 * 60 * 60
       timeLeft.days = Math.floor(diff / 86400);
       diff -= timeLeft.days * 86400;
@@ -74,26 +102,46 @@ class Countdown extends React.Component {
     const countDown = this.state;
 
     return (
-      <div className="Countdown">
-        <span className="countdown-col">
-          <strong>{this.addLeadingZeros(countDown.days)}</strong>
-          <span>{countDown.days === 1 ? 'Day' : 'Days'}</span>
-        </span>
+      <div className="countdown">
+        {/* show birthday animation & text all day */}
+      { !countDown.isBirthday ?
+        null
+      :
+        <div className="birthday-wrap">
+          <div className="pyro">
+            <div className="before"></div>
+            <div className="after"></div>
+          </div>
+          <div className="birthday-text">Happy Birthday!</div>
+        </div>
+      }
+        <div className="countdown-date-wrap">
+          <div className="date-container countdown-col">
+            <strong>{this.addLeadingZeros(countDown.days)}</strong>
+            <span>{countDown.days === 1 ? 'Day' : 'Days'}</span>
+          </div>
+          
+          <div className="date-container countdown-col">
+            <strong>{this.addLeadingZeros(countDown.hours)}</strong>
+            <span>Hours</span>
+          </div>
 
-        <span className="countdown-col">
-          <strong>{this.addLeadingZeros(countDown.hours)}</strong>
-          <span>Hours</span>
-        </span>
+          <div className="date-container countdown-col">
+            <strong>{this.addLeadingZeros(countDown.min)}</strong>
+            <span>Min</span>
+          </div>
 
-        <span className="countdown-col">
-          <strong>{this.addLeadingZeros(countDown.min)}</strong>
-          <span>Min</span>
-        </span>
+          {/* hide second countdown on birthday, to advoid showing negative number  */}
+          { countDown.isBirthday ?
+            null
+          :
+            <div className="date-container countdown-col">
+              <strong>{this.addLeadingZeros(countDown.sec)}</strong>
+              <span>Sec</span>
+            </div>
+          }
+        </div>
 
-        <span className="countdown-col">
-          <strong>{this.addLeadingZeros(countDown.sec)}</strong>
-          <span>Sec</span>
-        </span>
       </div>
     );
   }

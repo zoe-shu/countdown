@@ -1,3 +1,11 @@
+body {
+  background: linear-gradient(to right, #e2b8f7, #d4bafa, #c7bcfb, #b9befb, #acbff9);
+  cursor: crosshair;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  font-family: "Pacifico", cursive;
+}
+
 .App {
   text-align: center;
 }
